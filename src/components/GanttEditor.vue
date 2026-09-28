@@ -191,7 +191,10 @@ function setRateFromEvent(t: Task, trackEl: HTMLElement, clientX: number) {
   const r = trackEl.getBoundingClientRect();
   let pct = ((clientX - r.left) / r.width) * 100;
   pct = Math.round(pct / 5) * 5; // 5%刻みにスナップ
-  t.progress = Math.min(100, Math.max(0, pct));
+  const p = Math.min(100, Math.max(0, pct));
+  t.progress = p;
+  // 進捗に応じて状態を自動更新（0%=未対応 / 途中=処理中 / 100%=処理済み）
+  t.status = p >= 100 ? "review" : p > 0 ? "doing" : "todo";
 }
 function onRateDown(e: PointerEvent, t: Task) {
   if (!canEdit.value || t.ghost) return;
