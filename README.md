@@ -45,7 +45,7 @@ npm run dev          # http://localhost:5173
 
 ---
 
-## デプロイ（Vercel・面接官は鍵なしで開くだけ）
+## デプロイ（Vercel・誰でも鍵なしで開ける）
 
 1. このフォルダを Git リポジトリにして GitHub に push（または `npx vercel` で直接）。
 2. Vercel でプロジェクトを作成（フレームワークは **Vite** が自動検出される。`api/` は自動でサーバーレス関数になる）。
