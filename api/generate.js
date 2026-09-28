@@ -13,6 +13,46 @@ import { z } from "zod";
 const ANTHROPIC_MODEL = "claude-opus-4-8";
 const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-flash-lite-latest";
 
+// Vercel: 2段のAI呼び出しは合計で数十秒かかるため、関数の最大実行時間を延ばす
+// （既定10秒だと途中で打ち切られる。Hobbyプランの上限=60秒に設定）
+export const config = { maxDuration: 60 };
+
+// ---- 簡易レート制限（公開URLの無料枠いたずら消費・DoS 対策）----
+// サーバーレスはインスタンスが揮発するためベストエフォート（強固にするなら Vercel KV / Upstash 等へ）。
+const RL_WINDOW_MS = 10 * 60 * 1000; // 10分
+const RL_MAX = 30; // 1IPあたり 10分で30回まで
+const rlHits = new Map(); // ip -> number[]（アクセス時刻）
+function isRateLimited(ip) {
+  const now = Date.now();
+  const arr = (rlHits.get(ip) || []).filter((t) => now - t < RL_WINDOW_MS);
+  // 上限到達なら記録せず即拒否（連打時に配列が無限に伸びるのを防ぐ）
+  if (arr.length >= RL_MAX) {
+    rlHits.set(ip, arr);
+    return true;
+  }
+  arr.push(now);
+  rlHits.set(ip, arr);
+  if (rlHits.size > 5000) {
+    // 古いエントリを掃除（メモリ肥大の抑制）
+    for (const [k, v] of rlHits) {
+      if (!v.length || now - v[v.length - 1] > RL_WINDOW_MS) rlHits.delete(k);
+    }
+  }
+  return false;
+}
+function clientIp(req) {
+  const h = req.headers || {};
+  // Vercel 等のプロキシ配下では x-real-ip が実クライアントIP。
+  // x-forwarded-for は最左がクライアント詐称可能なので、使う場合は最右（プロキシ付与分）を採る。
+  if (h["x-real-ip"]) return String(h["x-real-ip"]).trim();
+  const xff = h["x-forwarded-for"];
+  if (xff) {
+    const parts = String(xff).split(",");
+    return parts[parts.length - 1].trim();
+  }
+  return (req.socket && req.socket.remoteAddress) || "unknown";
+}
+
 // ---- 出力スキーマ（Anthropic=Zod / Gemini=JSON Schema の2形式で用意）----
 const GenTaskZ = z.object({
   name: z.string(),
@@ -208,6 +248,12 @@ async function callAnthropic(apiKey, system, user, zodSchema) {
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     res.status(405).json({ error: "method_not_allowed" });
+    return;
+  }
+  // レート制限（1IPあたりの回数上限を超えたら 429）
+  if (isRateLimited(clientIp(req))) {
+    res.setHeader("Retry-After", "60");
+    res.status(429).json({ error: "rate_limited" });
     return;
   }
   const geminiKey = process.env.GEMINI_API_KEY;

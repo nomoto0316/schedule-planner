@@ -85,8 +85,19 @@ async function run() {
     activeNode.value = null;
     const m = err instanceof Error ? err.message : String(err);
     meta.value = "エラーが発生しました";
-    messages.value.push({ agent: "ref", text: `⚠ AIの呼び出しでエラー：${escapeText(m)}<br>APIキーやネットワークをご確認ください。デモモードなら鍵は不要です。` });
+    messages.value.push({ agent: "ref", text: friendlyError(m) });
   }
+}
+
+// エラーコードを利用者向けの分かりやすい文言に変換（v-html に入るため固定文言のみ）
+function friendlyError(code: string): string {
+  const known: Record<string, string> = {
+    rate_limited: "⚠ アクセスが集中しています。少し時間をおいてから、もう一度お試しください。",
+    input_too_large: "⚠ 入力が大きすぎます。過去実績やタスクの件数を減らして、もう一度お試しください。",
+    incomplete_stream: "⚠ 応答が途中で途切れました。もう一度お試しください。",
+  };
+  if (known[code]) return known[code];
+  return `⚠ AIの呼び出しでエラーが発生しました（${escapeText(code)}）。<br>ネットワークや時間をおいて再度お試しください。`;
 }
 
 function escapeText(s: string): string {
