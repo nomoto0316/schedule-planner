@@ -23,7 +23,7 @@
 ## 動かし方
 
 ### 1. 本物のAIで動かす（ログイン不要でローカル確認）
-APIキーをサーバー側で保持し、ブラウザは関数経由でClaudeを呼びます。**Vercelアカウント不要**。
+APIキーをサーバー側で保持し、ブラウザは関数経由で AI（既定は Gemini）を呼びます。**Vercelアカウント不要**。
 
 ```bash
 npm install          # 初回のみ（依存の取得）
@@ -67,11 +67,11 @@ npm run dev          # http://localhost:5173
        └ DemoClient : 保存済みシナリオを再生（鍵不要・フォールバック）
           │
           ▼
-/api/generate（サーバーレス関数・Node）  ← ANTHROPIC_API_KEY はここだけ
-  └ 2段の呼び出し：A=分解・見積り / B=反証・組み直し（Zodで構造化出力）
+/api/generate（サーバーレス関数・Node）  ← APIキー（GEMINI_API_KEY 等）はここだけ
+  └ 2段の呼び出し：A=分解・見積り / B=反証・組み直し（構造化出力）
           │
           ▼
-     Claude Opus 4.8
+   Gemini（既定・無料枠） / Claude（envで自動選択）
 ```
 
 - **AIとつながるのは1か所だけ**（`/api/generate`）。将来サーバーを厚くしても、ここを差し替えれば済む設計。
@@ -80,7 +80,7 @@ npm run dev          # http://localhost:5173
 
 ## 技術構成
 
-Vue 3（`<script setup>` / TypeScript）・Vite・Zod（構造化出力の検証）・Anthropic SDK（サーバー側）・Vercel サーバーレス関数。
+Vue 3（`<script setup>` / TypeScript）・Vite・Zod（構造化出力の検証）・Google Gemini API（既定・REST／サーバー側）・Anthropic SDK（任意・切替可）・Vercel サーバーレス関数。
 
 ## 注意
 
