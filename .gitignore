@@ -1,0 +1,35 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# 環境変数（APIキー）はアップロード・コミットしない
+.env
+.env.*
+!.env.example
+
+# 作業前バックアップ（ソースの複製・コミット不要）
+_backup_*/
+
+# 引き継ぎメモ（面談・個人情報を含むため公開リポジトリに入れない）
+HANDOFF.md
