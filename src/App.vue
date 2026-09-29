@@ -9,7 +9,7 @@ import type { Task, PastSchedule, PlanConfig, Status } from "./types";
 import { PROGRESS } from "./types";
 
 // ==== 入力状態 ====
-const project = ref("新支社オフィスのITインフラ構築（NW・サーバー・PC20台）");
+const project = ref("");
 const startDate = ref("2026-11-01");
 const dueDate = ref("2026-12-20");
 const pasts = ref<PastSchedule[]>(demoPasts());
